@@ -34,3 +34,7 @@ class KdtreeTest(unittest.TestCase):
         self.assertTrue(self.tree.search((1,6)))
         self.tree.delete((1,6))
         self.assertFalse(self.tree.search((1,6)))
+
+    def test_failed_delete(self):
+        with self.assertRaises(IndexError):
+            self.tree.delete((6,5))

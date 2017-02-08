@@ -68,7 +68,7 @@ class Kdtree(object):
 
     def delete(self, point):
         if not self.search(point):
-            print("Point not found")
+            raise IndexError("Point not found")
         # Check if the root node will be deleted
         if all([point[i] == self.tree.point[i] for i in xrange(len(point))]):
             self.tree = self.build(self.to_list(self.tree.left_child)+self.to_list(self.tree.right_child))
