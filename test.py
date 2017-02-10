@@ -38,3 +38,7 @@ class KdtreeTest(unittest.TestCase):
     def test_failed_delete(self):
         with self.assertRaises(IndexError):
             self.tree.delete((6,5))
+
+    def test_nearest_neighbor(self):
+        point = self.tree.get_nearest_neighbor((1,5))
+        self.assertEqual(point, (1,6))

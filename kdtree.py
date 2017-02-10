@@ -93,6 +93,48 @@ class Kdtree(object):
             return []
         return self.to_list(tree.left_child) + [tree.point] + self.to_list(tree.right_child)
 
+    def get_nearest_neighbor(self, point):
+        if not self.tree:
+            return None
+        else:
+            nn, distance2 = self._get_nearest_neighbor(self.tree, point)
+            return nn.point
+
+    def _get_nearest_neighbor(self, tree, point, depth=0):
+        current_node = tree
+        path = []
+        while current_node:
+            axis = depth % len(point)
+            if point[axis] < current_node.point[axis]:
+                path.append(current_node)
+                current_node = current_node.left_child
+                depth += 1
+            else:
+                path.append(current_node)
+                current_node = current_node.right_child
+                depth += 1
+        nn = current_node
+        current_best = float("inf")
+        while path:
+            depth -= 1
+            current_node = path.pop()
+            if self.distance(current_node.point, point) < current_best:
+                current_best = self.distance(current_node.point, point)
+                nn = current_node
+            axis = depth % len(point)
+            if current_best > abs(point[axis] - current_node.point[axis]):
+                if point[axis] < current_node.point[axis]:
+                    candidate, distance2 = self._get_nearest_neighbor(current_node.right_child, point, depth+1)
+                else:
+                    candidate, distance2 = self._get_nearest_neighbor(current_node.left_child, point, depth+1)
+                if distance2 < current_best:
+                    current_best = distance2
+                    nn = candidate
+        return nn, current_best
+
+    def distance(self, point1, point2):
+        return sum([(point1[i] - point2[i])**2 for i in xrange(len(point1))])
+
     def build(self, point_list, depth=0):
         try:
             k = len(point_list[0])
@@ -106,3 +148,6 @@ class Kdtree(object):
                 left_child=self.build(point_list[:median], depth+1),
                 right_child=self.build(point_list[median+1:], depth+1)
                 )
+
+    def __str__(self):
+        return self.tree.__str__()
