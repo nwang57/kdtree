@@ -152,45 +152,6 @@ class Kdtree(object):
                         bar[update_candidate] = False
         return knn, current_best
 
-    def get_nearest_neighbor(self, point):
-        if not self.tree:
-            return None
-        else:
-            nn, distance2 = self._get_nearest_neighbor(self.tree, point)
-            return nn.point
-
-    def _get_nearest_neighbor(self, tree, point, depth=0):
-        current_node = tree
-        path = []
-        while current_node:
-            axis = depth % len(point)
-            if point[axis] < current_node.point[axis]:
-                path.append(current_node)
-                current_node = current_node.left_child
-                depth += 1
-            else:
-                path.append(current_node)
-                current_node = current_node.right_child
-                depth += 1
-        nn = current_node
-        current_best = float("inf")
-        while path:
-            depth -= 1
-            current_node = path.pop()
-            if self.distance(current_node.point, point) < current_best:
-                current_best = self.distance(current_node.point, point)
-                nn = current_node
-            axis = depth % len(point)
-            if current_best > (point[axis] - current_node.point[axis])**2:
-                if point[axis] < current_node.point[axis]:
-                    candidate, distance2 = self._get_nearest_neighbor(current_node.right_child, point, depth+1)
-                else:
-                    candidate, distance2 = self._get_nearest_neighbor(current_node.left_child, point, depth+1)
-                if distance2 < current_best:
-                    current_best = distance2
-                    nn = candidate
-        return nn, current_best
-
     def distance(self, point1, point2):
         return sum([(point1[i] - point2[i])**2 for i in xrange(len(point1))])
 
