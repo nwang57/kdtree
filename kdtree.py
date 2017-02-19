@@ -122,17 +122,15 @@ class Kdtree(object):
             depth -= 1
             distance2 = self.distance(point, current.point)
             # make sure to fill up None first
+            max_distance = 0
+            update_candidate = None
             for i in xrange(k):
-                if not knn[i]:
-                    knn[i] = current
-                    current_best[i] = distance2
-                    break
-            else:
-                for i in xrange(k):
-                    if distance2 < current_best[i]:
-                        knn[i] = current
-                        current_best[i] = distance2
-                        break
+                if current_best[i] - distance2 > max_distance:
+                    max_distance = current_best[i] - distance2
+                    update_candidate = i
+            if update_candidate is not None:
+                knn[update_candidate] = current
+                current_best[update_candidate] = distance2
             axis = depth % len(point)
             bar = [ current_best[i] >= (point[axis] - current.point[axis])**2 for i in xrange(k) ]
             if any(bar):
@@ -142,11 +140,16 @@ class Kdtree(object):
                 else:
                     candidates, distance_list = self._get_k_nearest_neighbor(current.left_child,  point, sum(bar), depth+1)
                 for p in xrange(len(distance_list)):
+                    max_distance = 0
+                    update_candidate = None
                     for q in xrange(len(bar)):
-                        if bar[q] and distance_list[p] < current_best[q]:
-                            knn[q] = candidates[p]
-                            current_best[q] = distance_list[p]
-                            bar[q] = False
+                        if bar[q] and current_best[q] - distance_list[p] > max_distance:
+                            update_candidate = q
+                            max_distance = current_best[q] - distance_list[p]
+                    if update_candidate is not None:
+                        knn[update_candidate] = candidates[p]
+                        current_best[update_candidate] = distance_list[p]
+                        bar[update_candidate] = False
         return knn, current_best
 
     def get_nearest_neighbor(self, point):
