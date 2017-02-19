@@ -46,3 +46,8 @@ class KdtreeTest(unittest.TestCase):
     def test_nearest_neighbor(self):
         point = self.tree.get_nearest_neighbor((1,5))
         self.assertEqual(point, (1,6))
+
+    def test_k_nearest_neighbor(self):
+        knn = self.tree.get_k_nearest_neighbor((1,5), 2)
+        self.assertTrue((1,6) in knn)
+        self.assertTrue((2,3) in knn)

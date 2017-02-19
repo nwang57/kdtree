@@ -97,12 +97,57 @@ class Kdtree(object):
             return []
         return self.to_list(tree.left_child) + [tree.point] + self.to_list(tree.right_child)
 
-    def get_k_nearest_neighbot(self, point, k):
+    def get_k_nearest_neighbor(self, point, k):
         if not self.tree:
             return [None]*k
         else:
             knn, k_distance2 = self._get_k_nearest_neighbor(self.tree, point, k)
             return [ node.point for node in knn if node]
+
+    def _get_k_nearest_neighbor(self, tree, point, k, depth=0):
+        current_node = tree
+        path = []
+        while current_node:
+            axis = depth % len(point)
+            depth += 1
+            path.append(current_node)
+            if point[axis] < current_node.point[axis]:
+                current_node = current_node.left_child
+            else:
+                current_node = current_node.right_child
+        knn = [None] * k
+        current_best = [float('inf')] * k
+        while path:
+            current = path.pop()
+            depth -= 1
+            distance2 = self.distance(point, current.point)
+            # make sure to fill up None first
+            for i in xrange(k):
+                if not knn[i]:
+                    knn[i] = current
+                    current_best[i] = distance2
+                    break
+            else:
+                for i in xrange(k):
+                    if distance2 < current_best[i]:
+                        knn[i] = current
+                        current_best[i] = distance2
+                        break
+            axis = depth % len(point)
+            bar = [ current_best[i] >= (point[axis] - current.point[axis])**2 for i in xrange(k) ]
+            if any(bar):
+                # search subtree
+                if point[axis] < current.point[axis]:
+                    candidates, distance_list = self._get_k_nearest_neighbor(current.right_child,  point, sum(bar), depth+1)
+                else:
+                    candidates, distance_list = self._get_k_nearest_neighbor(current.left_child,  point, sum(bar), depth+1)
+                for p in xrange(len(distance_list)):
+                    for q in xrange(len(bar)):
+                        if bar[q] and distance_list[p] < current_best[q]:
+                            knn[q] = candidates[p]
+                            current_best[q] = distance_list[p]
+                            bar[q] = False
+        return knn, current_best
 
     def get_nearest_neighbor(self, point):
         if not self.tree:
@@ -133,7 +178,7 @@ class Kdtree(object):
                 current_best = self.distance(current_node.point, point)
                 nn = current_node
             axis = depth % len(point)
-            if current_best > abs(point[axis] - current_node.point[axis]):
+            if current_best > (point[axis] - current_node.point[axis])**2:
                 if point[axis] < current_node.point[axis]:
                     candidate, distance2 = self._get_nearest_neighbor(current_node.right_child, point, depth+1)
                 else:
