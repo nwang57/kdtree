@@ -9,11 +9,13 @@ class KdtreeTest(unittest.TestCase):
     def test_empty_tree(self):
         tree = Kdtree()
         self.assertIsNone(tree.tree)
+        self.assertEqual(tree.n_nodes, 0)
 
     def test_build_tree(self):
         point_list = [(2,3), (4,5), (3,8), (1,6), (7, 2)]
         tree = Kdtree(point_list)
         self.assertEqual(tree.get_height(), 3)
+        self.assertEqual(tree.n_nodes, 5)
 
     def test_search(self):
         self.assertTrue(self.tree.search((1,6)))
@@ -23,6 +25,7 @@ class KdtreeTest(unittest.TestCase):
         self.assertFalse(self.tree.search((5,3)))
         self.tree.add_point((5,3))
         self.assertTrue(self.tree.search((5,3)))
+        self.assertEqual(self.tree.n_nodes, 6)
 
     def test_to_list(self):
         test_point_list = self.tree.to_list(self.tree.tree)
@@ -34,6 +37,7 @@ class KdtreeTest(unittest.TestCase):
         self.assertTrue(self.tree.search((1,6)))
         self.tree.delete((1,6))
         self.assertFalse(self.tree.search((1,6)))
+        self.assertEqual(self.tree.n_nodes, 4)
 
     def test_failed_delete(self):
         with self.assertRaises(IndexError):

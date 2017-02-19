@@ -17,6 +17,7 @@ class Node(object):
 class Kdtree(object):
     def __init__(self, point_list=[]):
         self.tree = self.build(point_list)
+        self.n_nodes = len(point_list)
 
     def get_height(self):
         return self._get_height(self.tree)
@@ -42,29 +43,29 @@ class Kdtree(object):
                 return self._search(tree.right_child, point, depth+1)
 
     def add_point(self, point):
-        if self.search(point):
-            print("point: %s already in the tree" % point)
+        if not self.tree:
+            new_node = Node(point=point, left_child=None, right_child=None)
+            self.tree = new_node
+            self.n_nodes += 1
         else:
             self._add_point(self.tree, point)
 
     def _add_point(self, tree, point, depth=0):
-        if not tree:
-            new_node = Node(point=point, left_child=None, right_child=None)
-            tree = new_node
-        else:
-            axis = depth % len(point)
-            if point[axis] < tree.point[axis]:
-                if not tree.left_child:
-                    new_node = Node(point=point, left_child=None, right_child=None)
-                    tree.left_child = new_node
-                else:
-                    self._add_point(tree.left_child, point, depth+1)
+        axis = depth % len(point)
+        if point[axis] < tree.point[axis]:
+            if not tree.left_child:
+                new_node = Node(point=point, left_child=None, right_child=None)
+                tree.left_child = new_node
+                self.n_nodes += 1
             else:
-                if not tree.right_child:
-                    new_node = Node(point=point, left_child=None, right_child=None)
-                    tree.right_child = new_node
-                else:
-                    self._add_point(tree.right_child, point, depth+1)
+                self._add_point(tree.left_child, point, depth+1)
+        else:
+            if not tree.right_child:
+                new_node = Node(point=point, left_child=None, right_child=None)
+                tree.right_child = new_node
+                self.n_nodes += 1
+            else:
+                self._add_point(tree.right_child, point, depth+1)
 
     def delete(self, point):
         if not self.search(point):
@@ -72,6 +73,7 @@ class Kdtree(object):
         # Check if the root node will be deleted
         if all([point[i] == self.tree.point[i] for i in xrange(len(point))]):
             self.tree = self.build(self.to_list(self.tree.left_child)+self.to_list(self.tree.right_child))
+            self.n_nodes -= 1
         else:
             self._delete(self.tree, point)
 
@@ -80,11 +82,13 @@ class Kdtree(object):
         if point[axis] < tree.point[axis]:
             if all([point[i] == tree.left_child.point[i] for i in xrange(len(point))]):
                 tree.left_child = self.build(self.to_list(tree.left_child.left_child)+self.to_list(tree.left_child.right_child))
+                self.n_nodes -= 1
             else:
                 self._delete(tree.left_child, point, level+1)
         else:
             if all([point[i] == tree.right_child.point[i] for i in xrange(len(point))]):
                 tree.right_child = self.build(self.to_list(tree.right_child.left_child)+self.to_list(tree.right_child.right_child))
+                self.n_nodes -= 1
             else:
                 self._delete(tree.right_child, point, level+1)
 
@@ -92,6 +96,13 @@ class Kdtree(object):
         if tree is None:
             return []
         return self.to_list(tree.left_child) + [tree.point] + self.to_list(tree.right_child)
+
+    def get_k_nearest_neighbot(self, point, k):
+        if not self.tree:
+            return [None]*k
+        else:
+            knn, k_distance2 = self._get_k_nearest_neighbor(self.tree, point, k)
+            return [ node.point for node in knn if node]
 
     def get_nearest_neighbor(self, point):
         if not self.tree:
